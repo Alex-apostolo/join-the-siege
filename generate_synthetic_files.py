@@ -3,6 +3,10 @@ import random
 from synthetic_file_generators.bank_statement_generator import generate_bank_statement
 from synthetic_file_generators.invoice_generator import generate_invoice
 from synthetic_file_generators.drivers_licence_generator import generate_drivers_license
+from synthetic_file_generators.balance_sheet_generator import generate_balance_sheet
+from synthetic_file_generators.income_statement_generator import (
+    generate_income_statement,
+)
 
 
 # OCR error function with deletions
@@ -17,6 +21,8 @@ def generate_all_ocr_records():
         (generate_bank_statement, "bank_statement"),
         (generate_invoice, "invoice"),
         (generate_drivers_license, "driver_license"),
+        (generate_income_statement, "income_statement"),
+        (generate_balance_sheet, "balance_sheet"),
     ]
 
     return [

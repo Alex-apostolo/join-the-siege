@@ -4,6 +4,7 @@ from pytesseract import image_to_string
 from docx import Document
 import pandas as pd
 
+
 def extract_text(file_stream, file_extension):
     if file_extension == ".pdf":
         # Convert PDF byte stream to images and apply OCR
@@ -37,7 +38,9 @@ def extract_text(file_stream, file_extension):
         text = ""
         for sheet_name, sheet_data in excel_data.items():
             text += f"\nSheet: {sheet_name}\n"
-            text += sheet_data.to_string(index=False, header=True)  # Convert sheet to string
+            text += sheet_data.to_string(
+                index=False, header=True
+            )  # Convert sheet to string
         return text
 
     else:

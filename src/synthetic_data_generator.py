@@ -39,7 +39,7 @@ def generate_completion(content_prompt):
         return None
 
 
-def generate_data(content_types, num_examples=50):
+def synthetic_generate_data(content_types, num_examples=50):
     existing_data = (
         pd.read_csv(output_path)
         if Path(output_path).exists()
@@ -66,4 +66,4 @@ def generate_data(content_types, num_examples=50):
 
 
 if __name__ == "__main__":
-    generate_data(content_types, num_examples=50)
+    synthetic_generate_data(content_types, num_examples=50)

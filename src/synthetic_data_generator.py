@@ -5,6 +5,7 @@ from openai import OpenAI
 from dotenv import load_dotenv
 from config import DATA_PATH
 from pathlib import Path
+import random
 
 load_dotenv()
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(message)s")
@@ -39,7 +40,7 @@ def generate_completion(content_prompt):
         return None
 
 
-def synthetic_generate_data(content_types, num_examples=50):
+def generate_synthetic_data(content_types, num_examples=50):
     existing_data = (
         pd.read_csv(output_path)
         if Path(output_path).exists()
@@ -50,7 +51,10 @@ def synthetic_generate_data(content_types, num_examples=50):
         for k in content_types
     }
     new_data = [
-        {"content_type": name, "generated_text": generate_completion(prompt)}
+        {
+            "content_type": name,
+            "generated_text": apply_ocr_mutations(generate_completion(prompt)),
+        }
         for name, prompt in content_types.items()
         for _ in range(needed_examples[name])
         if needed_examples[name] > 0
@@ -65,5 +69,11 @@ def synthetic_generate_data(content_types, num_examples=50):
         logging.info("CSV is up-to-date.")
 
 
+def apply_ocr_mutations(text):
+    text = "".join((char + " " if random.random() < 0.1 else char) for char in text)
+    text = "".join(char for char in text if random.random() > 0.05)
+    return text
+
+
 if __name__ == "__main__":
-    synthetic_generate_data(content_types, num_examples=50)
+    generate_synthetic_data(content_types, num_examples=50)

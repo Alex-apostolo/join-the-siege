@@ -3,7 +3,7 @@ from pdf2image import convert_from_bytes
 from pytesseract import image_to_string
 from docx import Document
 import pandas as pd
-from concurrent.futures import ProcessPoolExecutor
+from PyPDF2 import PdfReader
 
 
 def ocr_image(image):
@@ -13,8 +13,18 @@ def ocr_image(image):
 
 def extract_text(file_stream, file_extension):
     if file_extension == ".pdf":
-        images = convert_from_bytes(file_stream.read())[:5]
-        text = "\n".join(image_to_string(image) for image in images)
+        try:
+            pdf_reader = PdfReader(file_stream)
+            text = "".join(
+                page.extract_text() for page in pdf_reader.pages if page.extract_text()
+            )
+        except Exception:
+            text = ""
+
+        if not text.strip():
+            file_stream.seek(0)
+            images = convert_from_bytes(file_stream.read())
+            text = "\n".join(image_to_string(image) for image in images)
         return text
 
     elif file_extension in [".jpg", ".jpeg", ".png"]:

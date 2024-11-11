@@ -11,6 +11,7 @@ def classify_file(file: FileStorage):
     text = extract_text(
         file_stream, file_extension
     )  # Pass the stream and extension to extract_text
+    print(text)
 
     model = AutoModelForSequenceClassification.from_pretrained(
         "alex-apostolo/distilbert-base-uncased-fc"

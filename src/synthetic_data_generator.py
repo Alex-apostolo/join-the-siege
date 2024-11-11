@@ -13,11 +13,11 @@ client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 output_path = DATA_PATH
 
 content_types = {
-    "drivers_license": "generate the text content of a realistic drivers license",
-    "bank_statement": "generate the text content of a realistic bank statement",
-    "invoice": "generate the text content of a realistic invoice",
-    "balance_sheet": "generate the text content of a realistic balance sheet",
-    "income_statement": "generate the text content of a realistic income statement",
+    "drivers_license": "generate the text content of a realistic drivers license from anywhere around the world",
+    "bank_statement": "generate the text content of a realistic bank statement from any bank around the world",
+    "invoice": "generate the text content of a realistic invoice from any company around the world",
+    "balance_sheet": "generate the text content of a realistic balance sheet from any company around the world",
+    "income_statement": "generate the text content of a realistic income statement from any company around the world",
 }
 
 prompt = "Exclude conversational or descriptive text; use synonyms or abbreviations; return only the text without any formatting."
@@ -32,7 +32,7 @@ def generate_completion(content_prompt):
                 {"role": "user", "content": content_prompt},
             ],
             temperature=1,
-            max_tokens=200,
+            max_tokens=246,
         )
         return response.choices[0].message.content
     except Exception as e:
@@ -53,7 +53,7 @@ def generate_synthetic_data(content_types, num_examples=50):
     new_data = [
         {
             "content_type": name,
-            "generated_text": apply_ocr_mutations(generate_completion(prompt)),
+            "generated_text": generate_completion(prompt),
         }
         for name, prompt in content_types.items()
         for _ in range(needed_examples[name])
@@ -67,12 +67,6 @@ def generate_synthetic_data(content_types, num_examples=50):
         logging.info(f"Data saved to {output_path}")
     else:
         logging.info("CSV is up-to-date.")
-
-
-def apply_ocr_mutations(text):
-    text = "".join((char + " " if random.random() < 0.1 else char) for char in text)
-    text = "".join(char for char in text if random.random() > 0.05)
-    return text
 
 
 if __name__ == "__main__":

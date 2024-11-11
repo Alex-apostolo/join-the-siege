@@ -11,7 +11,7 @@ from datasets import load_dataset
 from config import DATA_PATH
 
 id2label = {
-    0: "drivers_license",
+    0: "driver_license",
     1: "bank_statement",
     2: "invoice",
     3: "balance_sheet",
@@ -37,7 +37,7 @@ def tokenize(examples):
         examples["text"],
         padding="max_length",
         truncation=True,
-        max_length=128,
+        max_length=256,
     )
     return tokens
 

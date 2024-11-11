@@ -13,15 +13,8 @@ def ocr_image(image):
 
 def extract_text(file_stream, file_extension):
     if file_extension == ".pdf":
-        # Convert PDF to images
-        images = convert_from_bytes(file_stream.read())
-
-        # Process each page image in parallel using OCR
-        with ProcessPoolExecutor() as executor:
-            ocr_results = list(executor.map(ocr_image, images))
-
-        # Combine text from all pages
-        text = "\n".join(ocr_results)
+        images = convert_from_bytes(file_stream.read())[:5]
+        text = "\n".join(image_to_string(image) for image in images)
         return text
 
     elif file_extension in [".jpg", ".jpeg", ".png"]:

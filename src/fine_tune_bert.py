@@ -3,84 +3,109 @@ from transformers import (
     AutoTokenizer,
     Trainer,
     TrainingArguments,
+    DataCollatorWithPadding,
 )
-from sklearn.model_selection import train_test_split
 import pandas as pd
-import torch
-from torch.utils.data import Dataset
-from config import BASE_PATH
+import numpy as np
+import evaluate
+import json
+from datasets import Dataset
+from config import DATA_PATH, MODEL_PATH
+
+# Define label mappings
+id2label = {
+    0: "drivers_license",
+    1: "bank_statement",
+    2: "invoice",
+    3: "balance_sheet",
+    4: "income_statement",
+}
+label2id = {v: k for k, v in id2label.items()}
 
 
-class TextDataset(Dataset):
-    def __init__(self, texts, labels, tokenizer, max_length=128):
-        self.texts = texts
-        self.labels = labels
-        self.tokenizer = tokenizer
-        self.max_length = max_length
+# Utility function to split the dataset
+def load_and_split_dataset(test_size=0.2):
+    data = pd.read_csv(DATA_PATH)
+    data["labels"] = data["content_type"].map(label2id)
+    del data["content_type"]
 
-    def __len__(self):
-        return len(self.texts)
+    dataset = Dataset.from_pandas(data)
+    split_data = dataset.train_test_split(test_size=test_size)
+    return split_data["train"], split_data["test"]
 
-    def __getitem__(self, idx):
-        text = self.texts[idx]
-        label = self.labels[idx]
-        encoding = self.tokenizer(
-            text, truncation=True, padding="max_length", max_length=self.max_length
+
+# Utility function for tokenizing datasets
+def preprocess_data(tokenizer, dataset):
+    def preprocess_function(examples):
+        return tokenizer(
+            examples["generated_text"], padding="max_length", truncation=True
         )
-        encoding["labels"] = torch.tensor(label, dtype=torch.long)
-        return {key: torch.tensor(val) for key, val in encoding.items()}
+
+    tokenized_data = dataset.map(preprocess_function, batched=True)
+    tokenized_data.set_format(
+        type="torch", columns=["input_ids", "attention_mask", "labels"]
+    )
+    return tokenized_data
 
 
+# Compute accuracy metrics
+accuracy_metric = evaluate.load("accuracy")
+
+
+def compute_metrics(eval_pred):
+    predictions, labels = eval_pred
+    predictions = np.argmax(predictions, axis=1)
+    return accuracy_metric.compute(predictions=predictions, references=labels)
+
+
+# Save metrics to file
+def save_metrics(metrics, path, filename):
+    with open(path / filename, "w") as f:
+        json.dump(metrics, f)
+
+
+# Main training and evaluation function
 def fine_tune_bert():
-    # Load tokenizer and model
     model_name = "distilbert-base-uncased"
+    train_dataset, val_dataset = load_and_split_dataset()
+
+    # Load tokenizer and preprocess datasets
     tokenizer = AutoTokenizer.from_pretrained(model_name)
-    model = AutoModelForSequenceClassification.from_pretrained(
-        model_name, num_labels=10
-    )
+    tokenized_train = preprocess_data(tokenizer, train_dataset)
+    tokenized_val = preprocess_data(tokenizer, val_dataset)
 
-    # Load dataset
-    data = pd.read_csv(BASE_PATH / "combined_ocr.csv")  # Adjust path if necessary
+    # Data collator
+    data_collator = DataCollatorWithPadding(tokenizer=tokenizer)
 
-    # Assume the CSV has columns 'text' and 'label'
-    texts = data["text"].tolist()
-    labels = data["type"].tolist()
-
-    # Map labels to integers
-    label_to_id = {label: idx for idx, label in enumerate(sorted(set(labels)))}
-    int_labels = [label_to_id[label] for label in labels]
-
-    # Split the data into train and validation sets
-    train_texts, val_texts, train_labels, val_labels = train_test_split(
-        texts, int_labels, test_size=0.2, random_state=42
-    )
-
-    # Create PyTorch datasets
-    train_dataset = TextDataset(train_texts, train_labels, tokenizer)
-    val_dataset = TextDataset(val_texts, val_labels, tokenizer)
-
-    # Define training arguments
-    training_args = TrainingArguments(
-        output_dir="./fine_tuned_bert",
-        evaluation_strategy="epoch",
-        per_device_train_batch_size=8,
-        per_device_eval_batch_size=8,
-        num_train_epochs=3,
-        save_steps=500,
-    )
-
-    # Initialize Trainer
+    # Initialize the Trainer
     trainer = Trainer(
-        model=model,
-        args=training_args,
-        train_dataset=train_dataset,
-        eval_dataset=val_dataset,
+        model=AutoModelForSequenceClassification.from_pretrained(
+            model_name,
+            num_labels=len(id2label),
+            id2label=id2label,
+            label2id=label2id,
+        ),
+        args=TrainingArguments(
+            output_dir=str(MODEL_PATH),
+            eval_strategy="epoch",
+            per_device_train_batch_size=8,
+            num_train_epochs=3,
+        ),
+        train_dataset=tokenized_train,
+        eval_dataset=tokenized_val,
+        data_collator=data_collator,
+        compute_metrics=compute_metrics,
     )
 
     # Train and save the model
-    trainer.train()
-    trainer.save_model("./fine_tuned_bert")
-    tokenizer.save_pretrained("./fine_tuned_bert")
+    train_result = trainer.train()
+    trainer.save_model(MODEL_PATH)
+    tokenizer.save_pretrained(MODEL_PATH)
+
+    # Save training and evaluation metrics
+    save_metrics(train_result.metrics, MODEL_PATH, "train_metrics.json")
+    eval_metrics = trainer.evaluate()
+    save_metrics(eval_metrics, MODEL_PATH, "eval_metrics.json")
 
 
 if __name__ == "__main__":

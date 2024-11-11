@@ -10,7 +10,7 @@ import random
 load_dotenv()
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(message)s")
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-output_path = DATA_PATH / "synthetic_data.csv"
+output_path = DATA_PATH
 
 content_types = {
     "drivers_license": "generate the text content of a realistic drivers license",

@@ -4,20 +4,20 @@ from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
 class ModelInference:
     def __init__(
-        self, model_name="alex-apostolo/distilbert-base-uncased-fc", device=None
+        self,
+        model_name="alex-apostolo/distilbert-base-uncased-fc",
     ):
-        self.device = device or torch.device(
-            "cuda" if torch.cuda.is_available() else "cpu"
-        )
+        torch.set_num_threads(1)
+        torch.backends.quantized.engine = "qnnpack"
 
         self.model = AutoModelForSequenceClassification.from_pretrained(model_name)
         self.tokenizer = AutoTokenizer.from_pretrained(
             "distilbert/distilbert-base-uncased"
         )
 
+        self.device = torch.device("cpu")
         self.model.to(self.device)
         self.model.eval()
-        torch.set_num_threads(1)
 
     def predict(self, text):
         inputs = self.tokenizer(

@@ -3,14 +3,25 @@ from pdf2image import convert_from_bytes
 from pytesseract import image_to_string
 from docx import Document
 import pandas as pd
+from concurrent.futures import ProcessPoolExecutor
+
+
+def ocr_image(image):
+    custom_config = r"--oem 1 --psm 3"
+    return image_to_string(image, config=custom_config)
 
 
 def extract_text(file_stream, file_extension):
     if file_extension == ".pdf":
-        text = ""
+        # Convert PDF to images
         images = convert_from_bytes(file_stream.read())
-        for image in images:
-            text += image_to_string(image)
+
+        # Process each page image in parallel using OCR
+        with ProcessPoolExecutor() as executor:
+            ocr_results = list(executor.map(ocr_image, images))
+
+        # Combine text from all pages
+        text = "\n".join(ocr_results)
         return text
 
     elif file_extension in [".jpg", ".jpeg", ".png"]:

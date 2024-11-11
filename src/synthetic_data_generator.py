@@ -5,7 +5,6 @@ from openai import OpenAI
 from dotenv import load_dotenv
 from config import DATA_PATH
 from pathlib import Path
-import random
 
 load_dotenv()
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(message)s")
@@ -20,19 +19,17 @@ content_types = {
     "income_statement": "generate the text content of a realistic income statement from any company around the world",
 }
 
-prompt = "Exclude conversational or descriptive text; use synonyms or abbreviations; return only the text without any formatting."
+prompt = "Exclude conversational or descriptive text; use synonyms or abbreviations; Use fake data and avoid using placeholders; Vary the outputs as much as possible; return only the text without any formatting."
 
 
 def generate_completion(content_prompt):
     try:
         response = client.chat.completions.create(
-            model="gpt-4o-mini",
+            model="gpt-4-turbo",
             messages=[
                 {"role": "system", "content": prompt},
                 {"role": "user", "content": content_prompt},
             ],
-            temperature=1,
-            max_tokens=246,
         )
         return response.choices[0].message.content
     except Exception as e:

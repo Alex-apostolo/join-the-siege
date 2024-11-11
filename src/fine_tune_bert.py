@@ -11,7 +11,7 @@ from datasets import load_dataset
 from config import DATA_PATH
 
 id2label = {
-    0: "driver_license",
+    0: "drivers_license",
     1: "bank_statement",
     2: "invoice",
     3: "balance_sheet",

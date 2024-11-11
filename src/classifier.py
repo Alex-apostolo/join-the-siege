@@ -1,22 +1,17 @@
-from werkzeug.datastructures import FileStorage
-from src.file_text_extractor import extract_text
 import os
 from io import BytesIO
-import torch
+from src.text_extraction.file_text_extractor import FileTextExtractor
+from src.model.model_inference import ModelInference
 
 
-def classify_file(file: FileStorage, model, tokenizer, device):
+def classify_file(file):
     file_extension = os.path.splitext(file.filename)[1].lower()
     file_stream = BytesIO(file.read())
-    text = extract_text(file_stream, file_extension)
 
-    inputs = tokenizer(text, return_tensors="pt", padding=True, truncation=True).to(
-        device
-    )
-    with torch.no_grad():
-        outputs = model(**inputs)
+    text_extractor = FileTextExtractor()
+    text = text_extractor.extract_text(file_stream, file_extension)
 
-    logits = outputs.logits
-    predicted_class_id = logits.argmax().item()
-    predicted_class = model.config.id2label[predicted_class_id]
+    model_inference = ModelInference()
+    predicted_class = model_inference.predict(text)
+
     return predicted_class

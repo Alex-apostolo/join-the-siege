@@ -3,5 +3,6 @@ venv
 .idea
 .vscode
 __pycache__
+.pytest_cache
 *.pyc
 distilbert-base-uncased-fc

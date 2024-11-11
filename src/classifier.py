@@ -1,10 +1,8 @@
 from werkzeug.datastructures import FileStorage
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
-import torch
 from src.file_text_extractor import extract_text
 import os
 from io import BytesIO
-from config import MODEL_PATH
 
 
 def classify_file(file: FileStorage):
@@ -13,10 +11,11 @@ def classify_file(file: FileStorage):
     text = extract_text(
         file_stream, file_extension
     )  # Pass the stream and extension to extract_text
-    print(text)
 
-    model = AutoModelForSequenceClassification.from_pretrained(MODEL_PATH)
-    tokenizer = AutoTokenizer.from_pretrained(MODEL_PATH)
+    model = AutoModelForSequenceClassification.from_pretrained(
+        "alex-apostolo/distilbert-base-uncased-fc"
+    )
+    tokenizer = AutoTokenizer.from_pretrained("distilbert/distilbert-base-uncased")
     inputs = tokenizer(text, return_tensors="pt", padding=True, truncation=True)
     # Run the model to get outputs
     outputs = model(**inputs)

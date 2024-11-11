@@ -8,7 +8,6 @@ from transformers import (
 import pandas as pd
 import numpy as np
 import evaluate
-import json
 from datasets import Dataset
 from config import DATA_PATH, MODEL_PATH
 
@@ -58,26 +57,16 @@ def compute_metrics(eval_pred):
     return accuracy_metric.compute(predictions=predictions, references=labels)
 
 
-# Save metrics to file
-def save_metrics(metrics, path, filename):
-    with open(path / filename, "w") as f:
-        json.dump(metrics, f)
-
-
-# Main training and evaluation function
 def fine_tune_bert():
     model_name = "distilbert-base-uncased"
     train_dataset, val_dataset = load_and_split_dataset()
 
-    # Load tokenizer and preprocess datasets
     tokenizer = AutoTokenizer.from_pretrained(model_name)
     tokenized_train = preprocess_data(tokenizer, train_dataset)
     tokenized_val = preprocess_data(tokenizer, val_dataset)
 
-    # Data collator
     data_collator = DataCollatorWithPadding(tokenizer=tokenizer)
 
-    # Initialize the Trainer
     trainer = Trainer(
         model=AutoModelForSequenceClassification.from_pretrained(
             model_name,
@@ -86,10 +75,11 @@ def fine_tune_bert():
             label2id=label2id,
         ),
         args=TrainingArguments(
-            output_dir=str(MODEL_PATH),
+            output_dir="distilbert-base-uncased-fc",
             eval_strategy="epoch",
             per_device_train_batch_size=8,
             num_train_epochs=3,
+            push_to_hub=True,
         ),
         train_dataset=tokenized_train,
         eval_dataset=tokenized_val,
@@ -97,15 +87,8 @@ def fine_tune_bert():
         compute_metrics=compute_metrics,
     )
 
-    # Train and save the model
-    train_result = trainer.train()
-    trainer.save_model(MODEL_PATH)
-    tokenizer.save_pretrained(MODEL_PATH)
-
-    # Save training and evaluation metrics
-    save_metrics(train_result.metrics, MODEL_PATH, "train_metrics.json")
-    eval_metrics = trainer.evaluate()
-    save_metrics(eval_metrics, MODEL_PATH, "eval_metrics.json")
+    trainer.train()
+    trainer.push_to_hub()
 
 
 if __name__ == "__main__":

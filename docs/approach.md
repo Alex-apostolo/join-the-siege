@@ -58,3 +58,11 @@ Potential improvements include model quantization for faster inference and lever
    ```
 
 The app will be accessible at `http://127.0.0.1:8000/classify_file`.
+
+## Running the Tests
+
+```bash
+docker exec file_classifier pytest --maxfail=1 --disable-warnings
+docker exec file_classifier python -m tests.test_classifier_on_unseen_data
+docker exec file_classifier python -m tests.test_classifier_scale
+```

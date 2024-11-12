@@ -22,6 +22,18 @@ jobs:
       - name: Build Docker image
         run: docker build -t tests-image .
 
-      - name: Run Docker container and execute tests
+      - name: Start Docker container in detached mode
         run: |
-          docker run --rm --name Tests tests-image pytest --maxfail=1 --disable-warnings
+          docker run -d --name Tests -p 8000:8000 tests-image
+
+      - name: Wait for server to start
+        run: |
+          echo "Waiting for the server to start..."
+          sleep 10  # Adjust if the server takes longer to start
+
+      - name: Run tests
+        run: docker exec Tests pytest --maxfail=1 --disable-warnings
+
+      - name: Stop and remove Docker container
+        if: always()
+        run: docker container rm -f Tests

@@ -3,7 +3,7 @@ from pdf2image import convert_from_bytes
 from pytesseract import image_to_string
 from docx import Document
 import pandas as pd
-from PyPDF2 import PdfReader
+from pypdf import PdfReader
 
 
 class FileTextExtractor:

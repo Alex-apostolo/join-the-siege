@@ -6,9 +6,6 @@ from pathlib import Path
 
 URL = "http://127.0.0.1:8000/classify_file"
 FOLDER_PATH = BASE_PATH / "files"
-os.environ["TOKENIZERS_PARALLELISM"] = (
-    "false"  # Disable parallelism in Hugging Face tokenizers
-)
 
 
 def upload_file(file_path: Path):

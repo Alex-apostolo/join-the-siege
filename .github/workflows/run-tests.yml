@@ -1,4 +1,4 @@
-name: Tests
+name: CI
 
 on:
   push:
@@ -16,16 +16,17 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v2
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt  
+      - name: Build Docker image
+        run: docker build -t tests-image .
 
-      - name: Run tests
+      - name: Run Docker container and execute tests
         run: |
-          pytest  
+          docker run --name Tests tests-image pytest
+
+      - name: Clean up Docker container
+        if: always()
+        run: |
+          docker container rm -f Tests

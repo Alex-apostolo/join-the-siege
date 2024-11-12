@@ -1,4 +1,5 @@
 import torch
+import os
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
 
@@ -8,8 +9,8 @@ class ModelInference:
         model_name="alex-apostolo/distilbert-base-uncased-fc",
     ):
         torch.set_num_threads(1)
-        torch.backends.quantized.engine = "qnnpack"
 
+        os.environ["TOKENIZERS_PARALLELISM"] = "false"
         self.model = AutoModelForSequenceClassification.from_pretrained(model_name)
         self.tokenizer = AutoTokenizer.from_pretrained(
             "distilbert/distilbert-base-uncased"

@@ -1,13 +1,10 @@
 # File Classifier
 
-I built a file classifier with support for `.xlsx`, `.xls`, `.docx`, and `.txt` files. For PDFs and images, it uses OCR only when there's no selectable text; otherwise, it relies on format-specific loaders to handle text extraction.
+I built a file classifier with support for `.xlsx`, `.xls`, `.docx`, and `.txt` files. When no selectable text is available on a PDF or if its an image OCR is used; otherwise, rely on format-specific loaders to handle text extraction.
 
 Once the text is extracted, the classifier assigns a label based on the content.
 
 For the model, I fine-tuned DistilBERT. This choice was due to the high variability in text data and the importance of context, which transformer models like BERT excel at. DistilBERT keeps most of BERT’s strengths but is faster and more efficient. I generated realistic training data for fine-tuning using OpenAI's chat completions with a custom prompt.
-
-I uploaded the fine-tuned model to Hugging Face for easy access:  
-[DistilBERT for File Classification](https://huggingface.co/alex-apostolo/distilbert-base-uncased-fc).
 
 The app is optimized for real-time performance and supports asynchronous requests. I configured Gunicorn with 4 worker processes, which can be scaled further on more powerful machines. Inference runs on the CPU, as there’s no major benefit to using a GPU in this case.
 
@@ -15,7 +12,27 @@ The app is Dockerized for easy deployment, making it ready for production enviro
 
 ## Testing and Scaling
 
-I tested the classifier using realistic document samples, running `test_classifier_on_unseen_data` in parallel and all 12 documents were correctly predicted. For scalability testing, I simulated 1,000 concurrent documents which was completed in 20 seconds in my low performance laptop. With enough compute this time can drop drastically.
+I tested the classifier using real documents, running `test_classifier_on_unseen_data` all 12 documents were correctly predicted. For scalability testing, I simulated 1,000 concurrent documents which was completed in 20 seconds in my low performance laptop. With enough compute this time can drop drastically.
+
+The output of `test_classifier_on_unseen_data`:
+
+| File Name              | Label            |
+| ---------------------- | ---------------- |
+| drivers_license_1.jpg  | drivers_license  |
+| drivers_license_3.jpg  | drivers_license  |
+| drivers_license_2.jpg  | drivers_license  |
+| balance_sheet_3.xlsx   | balance_sheet    |
+| balance_sheet_1.pdf    | balance_sheet    |
+| bank_statement_1.pdf   | bank_statement   |
+| balance_sheet_2.pdf    | balance_sheet    |
+| bank_statement_3.pdf   | bank_statement   |
+| bank_statement_2.pdf   | bank_statement   |
+| income_statement_1.png | income_statement |
+| income_statement_2.png | income_statement |
+| income_statement_3.png | income_statement |
+| invoice_3.pdf          | invoice          |
+| invoice_2.pdf          | invoice          |
+| invoice_1.pdf          | invoice          |
 
 ### Industry Use Case
 

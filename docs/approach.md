@@ -54,7 +54,7 @@ Potential improvements include model quantization for faster inference and lever
 
 2. Run the container:
    ```bash
-   docker run -p 8000:8000 file_classifier
+   docker run -p 8000:8000 --name file_classifier file_classifier
    ```
 
 The app will be accessible at `http://127.0.0.1:8000/classify_file`.

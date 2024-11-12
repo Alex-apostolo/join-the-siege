@@ -24,7 +24,7 @@ def upload_files_in_parallel():
         for file_path in FOLDER_PATH.iterdir()
         if file_path.is_file() and not file_path.name.startswith(".")
     ]
-    with ProcessPoolExecutor() as executor:  # Use ProcessPoolExecutor instead of ThreadPoolExecutor
+    with ProcessPoolExecutor() as executor:
         results = list(executor.map(upload_file, file_paths))
     return results
 

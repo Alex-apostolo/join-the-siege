@@ -6,7 +6,7 @@ Once the text is extracted, the classifier assigns a label based on the content.
 
 For the model, I fine-tuned DistilBERT. I chose to use a transformer as it excels at NLP tasks and in this case we are dealing with structured data that have high variability in their format and content. Other models would struggle to generalise without the use of contextual embeddings. DistilBERT keeps most of BERT’s strengths but it is a distilled model meaning its significatly smaller making it faster at training and inferencing without sacrificing much of the performance.
 
-For the dataset, I generated realistic training data for fine-tuning the model using OpenAI's chat completions with a custom prompt. The synthetic data are very easy to scale to new industries by just adding a new key value pair on the `content_types`.
+For the dataset, I generated realistic training data for fine-tuning the model using OpenAI's chat completions with a custom prompt. The synthetic data are very easy to scale to new industries by just adding a new key value pair on the `content_types`. The model was fine tuned only in the synthetic dataset and the accuracy on the test set was 100%.
 
 The app is optimized for real-time performance and supports asynchronous requests. I configured Gunicorn with 4 worker processes, which can be scaled further on more powerful machines. Inference runs on the CPU, as there’s no major benefit to using a GPU in this case.
 

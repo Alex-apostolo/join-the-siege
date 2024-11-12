@@ -1,10 +1,12 @@
 # File Classifier
 
-I built a file classifier with support for `.xlsx`, `.xls`, `.docx`, and `.txt` files. When no selectable text is available on a PDF or if its an image OCR is used; otherwise, rely on format-specific loaders to handle text extraction.
+I built a file classifier which can process `pdf`, `png`, `jpg`, `xlsx`, `xls`, `docx` and `txt` files. When no selectable text is available on a PDF or if its an image OCR is used; otherwise specific loaders to handle text extraction are used.
 
 Once the text is extracted, the classifier assigns a label based on the content.
 
-For the model, I fine-tuned DistilBERT. This choice was due to the high variability in text data and the importance of context, which transformer models like BERT excel at. DistilBERT keeps most of BERT’s strengths but is faster and more efficient. I generated realistic training data for fine-tuning using OpenAI's chat completions with a custom prompt.
+For the model, I fine-tuned DistilBERT. I chose to use a transformer as it excels at NLP tasks and in this case we are dealing with structured data that have high variability in their format and content. Other models would struggle to generalise without the use of contextual embeddings. DistilBERT keeps most of BERT’s strengths but it is a distilled model meaning its significatly smaller making it faster at training and inferencing without sacrificing much of the performance.
+
+For the dataset, I generated realistic training data for fine-tuning the model using OpenAI's chat completions with a custom prompt. The synthetic data are very easy to scale to new industries by just adding a new key value pair on the `content_types`.
 
 The app is optimized for real-time performance and supports asynchronous requests. I configured Gunicorn with 4 worker processes, which can be scaled further on more powerful machines. Inference runs on the CPU, as there’s no major benefit to using a GPU in this case.
 
@@ -12,7 +14,7 @@ The app is Dockerized for easy deployment, making it ready for production enviro
 
 ## Testing and Scaling
 
-I tested the classifier using real documents, running `test_classifier_on_unseen_data` all 12 documents were correctly predicted. For scalability testing, I simulated 1,000 concurrent documents which was completed in 20 seconds in my low performance laptop. With enough compute this time can drop drastically.
+I tested the classifier using real documents, running `test_classifier_on_unseen_data` all 12 documents were correctly predicted. For scalability testing, I simulated 1,000 concurrent request calls which was completed in 40 seconds in my low performance laptop. With enough compute this time can drop drastically.
 
 The output of `test_classifier_on_unseen_data`:
 
@@ -36,7 +38,7 @@ The output of `test_classifier_on_unseen_data`:
 
 ### Industry Use Case
 
-This classifier could be especially useful for the insurance industry, where insurers can quickly analyze financial documents like income statements and balance sheets to assess the risk of an insurance claim for the specific company.
+This classifier was extended to be useful for the insurance industry since insurers can analyse a companys balance sheets and income statements to understand the financial state of a company before creating an underwriting for them.
 
 ## Future Enhancements
 

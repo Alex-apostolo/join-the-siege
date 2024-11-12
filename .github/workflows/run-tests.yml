@@ -24,9 +24,4 @@ jobs:
 
       - name: Run Docker container and execute tests
         run: |
-          docker run --name Tests tests-image pytest
-
-      - name: Clean up Docker container
-        if: always()
-        run: |
-          docker container rm -f Tests
+          docker run --rm --name Tests tests-image pytest --maxfail=1 --disable-warnings
